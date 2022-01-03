@@ -149,7 +149,7 @@ var LibraryManager = /** @class */ (function () {
                     case 0:
                         _a.trys.push([0, 2, , 3]);
                         log.debug("loading language ".concat(language, " for library ").concat(LibraryName_1["default"].toUberName(library)));
-                        return [4 /*yield*/, this.libraryStorage.getFileAsString(library, "language/".concat(language, ".json"))];
+                        return [4 /*yield*/, this.getLanguageFileAsString(library, language)];
                     case 1:
                         languageFileAsString = _a.sent();
                         // If the implementation has specified one, we use a hook to alter
@@ -869,6 +869,85 @@ var LibraryManager = /** @class */ (function () {
                         _a.sent();
                         throw error_6;
                     case 7: return [2 /*return*/];
+                }
+            });
+        });
+    };
+    LibraryManager.prototype.getLanguageFileAsString = function (library, language) {
+        return __awaiter(this, void 0, void 0, function () {
+            var languageFileFormats, languageFile, _i, languageFileFormats_1, fileFormat, fileExists, languageFileAsString;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        languageFileFormats = [
+                            language,
+                            (function () {
+                                // xx_XX
+                                var _a = language
+                                    .replace("-", "_")
+                                    .split("_"), languageCode = _a[0], countryCode = _a[1];
+                                if (!languageCode || !countryCode)
+                                    return;
+                                return "".concat(languageCode.toLowerCase(), "_").concat(countryCode.toUpperCase());
+                            })(),
+                            (function () {
+                                // xx-XX
+                                var _a = language
+                                    .replace("_", "-")
+                                    .split("-"), languageCode = _a[0], countryCode = _a[1];
+                                if (!languageCode || !countryCode)
+                                    return;
+                                return "".concat(languageCode.toLowerCase(), "-").concat(countryCode.toUpperCase());
+                            })(),
+                            (function () {
+                                // xx_xx
+                                var _a = language
+                                    .toLowerCase()
+                                    .replace("-", "_")
+                                    .split("_"), languageCode = _a[0], countryCode = _a[1];
+                                if (!languageCode || !countryCode)
+                                    return;
+                                return "".concat(languageCode, "_").concat(countryCode);
+                            })(),
+                            (function () {
+                                // xx-xx
+                                var _a = language
+                                    .toLowerCase()
+                                    .replace("_", "-")
+                                    .split("-"), languageCode = _a[0], countryCode = _a[1];
+                                if (!languageCode || !countryCode)
+                                    return;
+                                return "".concat(languageCode, "-").concat(countryCode);
+                            })(),
+                            (function () {
+                                // xx
+                                var languageCode = language.toLowerCase().split(/[_-]/)[0];
+                                if (!languageCode)
+                                    return;
+                                return "".concat(languageCode);
+                            })()
+                        ].filter(function (fileFormat) { return !!fileFormat; });
+                        languageFile = null;
+                        _i = 0, languageFileFormats_1 = languageFileFormats;
+                        _a.label = 1;
+                    case 1:
+                        if (!(_i < languageFileFormats_1.length)) return [3 /*break*/, 4];
+                        fileFormat = languageFileFormats_1[_i];
+                        return [4 /*yield*/, this.libraryStorage.fileExists(library, "language/".concat(fileFormat, ".json"))];
+                    case 2:
+                        fileExists = _a.sent();
+                        if (fileExists) {
+                            languageFile = "language/".concat(fileFormat, ".json");
+                            return [3 /*break*/, 4];
+                        }
+                        _a.label = 3;
+                    case 3:
+                        _i++;
+                        return [3 /*break*/, 1];
+                    case 4: return [4 /*yield*/, this.libraryStorage.getFileAsString(library, languageFile)];
+                    case 5:
+                        languageFileAsString = _a.sent();
+                        return [2 /*return*/, languageFileAsString];
                 }
             });
         });

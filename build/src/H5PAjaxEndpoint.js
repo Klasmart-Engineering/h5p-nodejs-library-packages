@@ -100,27 +100,39 @@ var H5PAjaxEndpoint = /** @class */ (function () {
          * send back in the response
          */
         this.getAjax = function (action, machineName, majorVersion, minorVersion, language, user) { return __awaiter(_this, void 0, void 0, function () {
-            var _a, _b;
+            var _a, contentTypeCache, _b;
             return __generator(this, function (_c) {
                 switch (_c.label) {
                     case 0:
                         _a = action;
                         switch (_a) {
                             case 'content-type-cache': return [3 /*break*/, 1];
-                            case 'content-hub-metadata-cache': return [3 /*break*/, 2];
-                            case 'libraries': return [3 /*break*/, 4];
+                            case 'content-hub-metadata-cache': return [3 /*break*/, 3];
+                            case 'libraries': return [3 /*break*/, 5];
                         }
-                        return [3 /*break*/, 5];
+                        return [3 /*break*/, 6];
                     case 1:
                         if (!user) {
                             throw new Error('You must specify a user when calling getAjax(...).');
                         }
-                        return [2 /*return*/, this.h5pEditor.getContentTypeCache(user, language)];
+                        return [4 /*yield*/, this.h5pEditor.getContentTypeCache(user, language)];
                     case 2:
+                        contentTypeCache = _c.sent();
+                        // Filter out the original CoursePresentation content type
+                        // since KidsLoop has its own version (CoursePresentationKID).
+                        // AppearIn has copyright issues, so we're filtering that one
+                        // out too.
+                        // TODO: Do this in a cleaner way.
+                        contentTypeCache.libraries = contentTypeCache.libraries.filter(function (x) {
+                            return x.machineName !== 'H5P.CoursePresentation' &&
+                                x.machineName !== 'H5P.AppearIn';
+                        });
+                        return [2 /*return*/, contentTypeCache];
+                    case 3:
                         _b = AjaxSuccessResponse_1["default"].bind;
                         return [4 /*yield*/, this.h5pEditor.contentHub.getMetadata(language)];
-                    case 3: return [2 /*return*/, new (_b.apply(AjaxSuccessResponse_1["default"], [void 0, _c.sent()]))()];
-                    case 4:
+                    case 4: return [2 /*return*/, new (_b.apply(AjaxSuccessResponse_1["default"], [void 0, _c.sent()]))()];
+                    case 5:
                         if (machineName === undefined ||
                             majorVersion === undefined ||
                             minorVersion === undefined) {
@@ -131,7 +143,7 @@ var H5PAjaxEndpoint = /** @class */ (function () {
                         // getLibraryData validates the library name and language code,
                         // so we don't do it here.
                         return [2 /*return*/, this.h5pEditor.getLibraryData(machineName.toString(), majorVersion.toString(), minorVersion.toString(), language === null || language === void 0 ? void 0 : language.toString())];
-                    case 5: throw new H5pError_1["default"]('malformed-request', {
+                    case 6: throw new H5pError_1["default"]('malformed-request', {
                         error: "The only allowed actions at the GET Ajax endpoint are 'content-type-cache' and 'libraries'."
                     }, 400);
                 }

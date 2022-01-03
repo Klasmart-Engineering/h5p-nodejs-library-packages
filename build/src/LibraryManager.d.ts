@@ -215,4 +215,5 @@ export default class LibraryManager {
      * @param newLibraryMetadata the library metadata (library.json)
      */
     private updateLibrary;
+    private getLanguageFileAsString;
 }
