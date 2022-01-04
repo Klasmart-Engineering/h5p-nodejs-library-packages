@@ -312,8 +312,8 @@ var H5PPlayer = /** @class */ (function () {
         // see https://h5p.org/creating-your-own-h5p-plugin
         log.info("generating integration for ".concat(contentId));
         return __assign(__assign({ ajax: {
-                contentUserData: this.urlGenerator.contentUserData(user),
-                setFinished: this.urlGenerator.setFinished(user)
+                contentUserData: '',
+                setFinished: ''
             }, ajaxPath: this.urlGenerator.ajaxEndpoint(user), contents: (_a = {},
                 _a["cid-".concat(contentId)] = {
                     displayOptions: {
