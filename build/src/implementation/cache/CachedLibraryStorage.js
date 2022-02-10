@@ -64,9 +64,10 @@ var CachedLibraryStorage = /** @class */ (function () {
      * used; **IMPORTANT: The default in-memory cache does not with
      * multi-process or multi-machine setups!**
      */
-    function CachedLibraryStorage(storage, cache) {
+    function CachedLibraryStorage(storage, cache, keyPrefix) {
         this.storage = storage;
         this.cache = cache;
+        this.keyPrefix = keyPrefix;
         this.ADDONS_CACHE_KEY = 'addons';
         this.FILE_EXISTS_CACHE_KEY = 'exists';
         this.FILE_LIST = 'files';
@@ -84,6 +85,9 @@ var CachedLibraryStorage = /** @class */ (function () {
                 max: Math.pow(2, 10)
             });
         }
+        this.ADDONS_CACHE_KEY = keyPrefix + this.ADDONS_CACHE_KEY;
+        this.INSTALLED_LIBRARY_NAMES_CACHE_KEY =
+            keyPrefix + this.INSTALLED_LIBRARY_NAMES_CACHE_KEY;
     }
     CachedLibraryStorage.prototype.addFile = function (library, filename, readStream) {
         return __awaiter(this, void 0, void 0, function () {
@@ -384,13 +388,13 @@ var CachedLibraryStorage = /** @class */ (function () {
         });
     };
     CachedLibraryStorage.prototype.getCacheKeyForFile = function (library, filename, usage) {
-        return "".concat(LibraryName_1["default"].toUberName(library), "/").concat(filename, "-").concat(usage);
+        return "".concat(this.keyPrefix).concat(LibraryName_1["default"].toUberName(library), "/").concat(filename, "-").concat(usage);
     };
     CachedLibraryStorage.prototype.getCacheKeyForLibraryListByMachineName = function (machineName) {
-        return "".concat(this.INSTALLED_LIBRARY_NAMES_CACHE_KEY, "-").concat(machineName);
+        return "".concat(this.keyPrefix).concat(this.INSTALLED_LIBRARY_NAMES_CACHE_KEY, "-").concat(machineName);
     };
     CachedLibraryStorage.prototype.getCacheKeyForMetadata = function (library, usage) {
-        return "".concat(LibraryName_1["default"].toUberName(library), "-").concat(usage);
+        return "".concat(this.keyPrefix).concat(LibraryName_1["default"].toUberName(library), "-").concat(usage);
     };
     return CachedLibraryStorage;
 }());

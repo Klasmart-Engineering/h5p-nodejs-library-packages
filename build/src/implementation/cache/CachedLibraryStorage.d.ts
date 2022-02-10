@@ -20,13 +20,14 @@ import { ILibraryStorage, ILibraryName, ILibraryMetadata, IInstalledLibrary, IFi
 export default class CachedLibraryStorage implements ILibraryStorage {
     protected storage: ILibraryStorage;
     protected cache?: Cache;
+    protected keyPrefix?: string;
     /**
      * @param storage the uncached storage behind the cache
      * @param cache the cache to use; if undefined an in-memory cache will be
      * used; **IMPORTANT: The default in-memory cache does not with
      * multi-process or multi-machine setups!**
      */
-    constructor(storage: ILibraryStorage, cache?: Cache);
+    constructor(storage: ILibraryStorage, cache?: Cache, keyPrefix?: string);
     private readonly ADDONS_CACHE_KEY;
     private readonly FILE_EXISTS_CACHE_KEY;
     private readonly FILE_LIST;
