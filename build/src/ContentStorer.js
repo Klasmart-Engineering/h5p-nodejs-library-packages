@@ -47,6 +47,7 @@ var Logger_1 = __importDefault(require("./helpers/Logger"));
 var FilenameGenerator_1 = __importDefault(require("./helpers/FilenameGenerator"));
 var SemanticsEnforcer_1 = __importDefault(require("./SemanticsEnforcer"));
 var log = new Logger_1["default"]('ContentStorer');
+var PATH_FIX_REGEX = new RegExp('^(../[^/]+/){1,}');
 /**
  * Contains logic to store content in permanent storage. Copies files from
  * temporary storage and deletes unused files.
@@ -76,8 +77,11 @@ var ContentStorer = /** @class */ (function () {
      * Saves content in the persistence system. Also copies over files from
      * temporary storage or from other content if the content was pasted from
      * there.
+     *
+     * Note: This method has side-effects on the parameters argument, meaning it
+     * mutates the object!
      * @param contentId the contentId (can be undefined if previously unsaved)
-     * @param parameters the parameters of teh content (= content.json)
+     * @param parameters the parameters of the content (= content.json)
      * @param metadata = content of h5p.json
      * @param mainLibraryName the library name
      * @param user the user who wants to save the file
@@ -273,7 +277,7 @@ var ContentStorer = /** @class */ (function () {
      */
     ContentStorer.prototype.copyFromDirectoryToTemporary = function (metadata, packageDirectory, user) {
         return __awaiter(this, void 0, void 0, function () {
-            var parameters, fileReferencesInParams, _i, fileReferencesInParams_1, reference, filepath, readStream, newFilename;
+            var parameters, fileReferencesInParams, filePathToNewFilenameMap, _i, fileReferencesInParams_1, reference, filepath, newFilename, readStream;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, fs_extra_1["default"].readJSON(path_1["default"].join(packageDirectory, 'content', 'content.json'))];
@@ -282,12 +286,23 @@ var ContentStorer = /** @class */ (function () {
                         return [4 /*yield*/, this.contentFileScanner.scanForFiles(parameters, metadata.preloadedDependencies.find(function (l) { return l.machineName === metadata.mainLibrary; }))];
                     case 2:
                         fileReferencesInParams = _a.sent();
+                        filePathToNewFilenameMap = new Map();
                         _i = 0, fileReferencesInParams_1 = fileReferencesInParams;
                         _a.label = 3;
                     case 3:
                         if (!(_i < fileReferencesInParams_1.length)) return [3 /*break*/, 7];
                         reference = fileReferencesInParams_1[_i];
+                        // Handling an H5P copy/paste bug where paths get prefixed with '../[contentId]/'
+                        // images/abcd.png -> images/abcd.png
+                        // ../1234/images/abcd.png -> images/abcd.png
+                        // ../1234/../5678/images/abcd.png -> images/abcd.png
+                        reference.filePath = reference.filePath.replace(PATH_FIX_REGEX, '');
                         filepath = path_1["default"].join(packageDirectory, 'content', reference.filePath);
+                        newFilename = filePathToNewFilenameMap.get(filepath);
+                        if (newFilename) {
+                            reference.context.params.path = "".concat(newFilename, "#tmp");
+                            return [3 /*break*/, 6];
+                        }
                         return [4 /*yield*/, fs_extra_1["default"].pathExists(filepath)];
                     case 4:
                         // If the file referenced in the parameters isn't included in the
@@ -304,6 +319,7 @@ var ContentStorer = /** @class */ (function () {
                     case 5:
                         newFilename = _a.sent();
                         reference.context.params.path = "".concat(newFilename, "#tmp");
+                        filePathToNewFilenameMap.set(filepath, newFilename);
                         _a.label = 6;
                     case 6:
                         _i++;
@@ -604,9 +620,10 @@ var ContentStorer = /** @class */ (function () {
      */
     ContentStorer.prototype.determineFilesToCopyFromTemporaryStorage = function (fileReferencesInNewParams, oldFiles) {
         return __awaiter(this, void 0, void 0, function () {
-            var filesToCopyFromTemporaryStorage, _loop_2, _i, fileReferencesInNewParams_1, ref;
+            var filesToCopyFromTemporaryStorage, hashSet, _loop_2, _i, fileReferencesInNewParams_1, ref;
             return __generator(this, function (_a) {
                 filesToCopyFromTemporaryStorage = [];
+                hashSet = new Set();
                 _loop_2 = function (ref) {
                     // We mark the file to be copied over from temporary storage if the
                     // file has a temporary marker.
@@ -614,11 +631,13 @@ var ContentStorer = /** @class */ (function () {
                         // We only save temporary file for later copying, however, if
                         // the there isn't already a file with the exact name. This
                         // might be the case if the user presses "save" twice.
-                        if (!oldFiles.some(function (f) { return f === ref.filePath; })) {
+                        if (!hashSet.has(ref.filePath) &&
+                            !oldFiles.some(function (f) { return f === ref.filePath; })) {
                             filesToCopyFromTemporaryStorage.push(ref);
                         }
                         // remove temporary file marker from parameters
                         ref.context.params.path = ref.filePath;
+                        hashSet.add(ref.filePath);
                     }
                 };
                 for (_i = 0, fileReferencesInNewParams_1 = fileReferencesInNewParams; _i < fileReferencesInNewParams_1.length; _i++) {
